@@ -42,15 +42,18 @@ class Data(object):
 
     def setExamples(self,examples,target):
         '''set examples for regression'''
-	values = []
-	for example in examples:
-	    values.append(float(example.split(' ')[1]))
+        
+        values = []
+        for example in examples:
+            values.append(float(example.split(' ')[1]))
         for example in examples:
             predicate = example.split(' ')[0] #get predicate
             value = float(example.split(' ')[1]) # get true regression value
             if predicate.split('(')[0] == target:
                 self.examplesTrueValue[predicate] = value #store true value of example
-                self.examples[predicate] = value - sum(values)/float(len(values)) #set initial gradient for example
+                self.examples[predicate] = value - sum(values)/float(len(values)) #set value for example, otherwise no variance
+		if Utils.RRT:
+                    self.examples[predicate] = value
 
     def setNeg(self,neg,target):
         '''set negative examples from neg list'''
@@ -136,6 +139,13 @@ class Utils(object):
     data = None #attribute to store data (facts,positive and negative examples)
     UniqueVariableCollection = set(list(string.ascii_uppercase))
 
+    RRT = False
+
+    @staticmethod
+    def setRRT():
+        '''sets RRT to true'''
+	Utils.RRT = True
+
     @staticmethod
     def addVariableTypes(literal):
         '''adds type of variables contained in literal'''
@@ -194,14 +204,12 @@ class Utils(object):
         Utils.data = Data()
         Utils.data.regression = regression
         sampled_facts = [fact for fact in facts if random.random() < sampling_rate]
+        sampled_examples = [example for example in examples if random.random() < sampling_rate]
         Utils.data.setFacts(sampled_facts)
         if not regression:
-            sampled_pos = [ex for ex in pos if random.random() < sampling_rate]
-            sampled_neg = [ex for ex in neg if random.random() < sampling_rate]
-            Utils.data.setPos(sampled_pos,target)
-            Utils.data.setNeg(sampled_neg,target)
+            Utils.data.setPos(pos,target)
+            Utils.data.setNeg(neg,target)
         elif regression:
-            sampled_examples = [example for example in examples if random.random() < sampling_rate]
             Utils.data.setExamples(sampled_examples,target)
         Utils.data.setBackground(bk)
         if not regression:

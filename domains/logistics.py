@@ -197,4 +197,4 @@ for i in range(20):
                     t.append(s.get_facts())
     tas.append(ta)
     s_number += len(t)
-create_data_set(tas,shaping=False,tree_distance=True)
+create_data_set(tas)
