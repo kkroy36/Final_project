@@ -34,8 +34,8 @@ def main():
         examples = f.read().splitlines()
     with open("facts.txt") as f:
         facts = f.read().splitlines()
-    bk = ["tIn(+state,+truck,-city)",
-	  "bOn(+state,+box,-truck)",
+    bk = ["tIn(+state,+truck,+city)",
+	  "bOn(+state,+box,+truck)",
 	  "destination(+state,+city)",
 	  "value(state)"]
     approximator = RLA(examples=examples,facts=facts,bk=bk)

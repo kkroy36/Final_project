@@ -16,7 +16,7 @@ class GradientBoosting(object):
         self.treeDepth = treeDepth
         self.trees = {}
 	if RRT:
-	    Utils.setRRT = True
+	    Utils.setRRT()
 	    self.numberOfTrees = 1
         self.data = None
         self.loss = loss
@@ -24,6 +24,7 @@ class GradientBoosting(object):
 
     def setTargets(self,targets):
         self.targets = targets
+
 
     def learn(self,facts,examples,bk):
         for target in self.targets:

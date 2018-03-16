@@ -12,13 +12,14 @@ class node(object):
     learnedDecisionTree = [] #this will hold all the clauses learned
     data = None #stores all the facts, positive and negative examples
     learnedDotFile = [] #this will store the dot file for the tree learned
+    label = 1
 
     @staticmethod
     def setMaxDepth(depth):
         '''method to set max depth'''
         node.maxDepth = depth
 
-    def __init__(self,test=None,examples=None,information=None,level=None,parent=None,pos=None):
+    def __init__(self,test=None,examples=None,information=None,level=None,parent=None,pos=None,label=1):
         '''constructor for node class
            contains test condition or clause
            contains examples
@@ -27,6 +28,7 @@ class node(object):
            contains parent node pointer
            and contains position in the tree
         '''
+        self.label = label
         self.test = test #set test condition, which will be a horn clause
         if level > 0: #check if root
             self.parent = parent #if not root set parent as the nodes parent
@@ -46,17 +48,17 @@ class node(object):
         node.data = trainingData
         node.expandQueue = [] #reset node queue for every tree to be learned
         node.learnedDecisionTree = [] #reset clauses for every tree to be learned
-        #node.learnedDotFile = ["digraph{"] #reset dot file for every tree to be learned
+        #node.learnedDotFile = [] #reset dot file for every tree to be learned
         if not trainingData.regression:
             """@batflyer
             In Python 2, .keys() returns a list, whereas in Python 3 it returns a dictionary view.
             ===> Forcing a list.
             """
             examples = list(trainingData.pos.keys()) + list(trainingData.neg.keys()) #collect all examples
-            node(None,examples,Utils.variance(examples),0,"root") #create root node
+            node(None,examples,Utils.variance(examples),0,"root",node.label) #create root node
         elif trainingData.regression:
             examples = list(trainingData.examples.keys()) #collect regression examples
-            node(None,examples,Utils.variance(examples),0,"root")
+            node(None,examples,Utils.variance(examples),0,"root",node.label)
 
     @staticmethod
     def learnTree(data):
@@ -98,7 +100,7 @@ class node(object):
                 clause += ""#"!"+curr.parent.test+","
                 ancestorTests.append(curr.parent.test)
             curr = curr.parent
-        if self.level == node.maxDepth or round(self.information,2) == 0:
+        if self.level == node.maxDepth or round(self.information,8) == 0:
             if clause[-1]!='-':
                 node.learnedDecisionTree.append(clause[:-1]+" "+str(Utils.getleafValue(self.examples)))
             else:
@@ -150,14 +152,16 @@ class node(object):
         #if self.parent != "root":
             #node.learnedDotFile.append(self.parent.test+str("->")+self.test)
         if len(bestTExamples) > 0: #if examples still need explaining create left node and add to queue
-            self.left = node(None,bestTExamples,Utils.variance(bestTExamples),self.level+1,self,"left")
+            self.left = node(None,bestTExamples,Utils.variance(bestTExamples),self.level+1,self,"left",node.label+1)
+            node.label += 1
             if self.level+1 > node.depth:
                 node.depth = self.level+1
         if len(bestFExamples) > 0: #if examples still need explaining, create right node and add to queue
-            self.right = node(None,bestFExamples,Utils.variance(bestFExamples),self.level+1,self,"right")
+            self.right = node(None,bestFExamples,Utils.variance(bestFExamples),self.level+1,self,"right",node.label+1)
+            node.label += 1
             if self.level+1 > node.depth:
                 node.depth = self.level+1
-        if self.test == "" or round(self.information,2) == 0: #if no examples append clause as is
+        if self.test == "" or round(self.information,8) == 0: #if no examples append clause as is
             if clause[-1]!='-':
                 node.learnedDecisionTree.append(clause[:-1])
             else:
