@@ -15,6 +15,7 @@ class GradientBoosting(object):
         self.numberOfTrees = trees
         self.treeDepth = treeDepth
         self.trees = {}
+        self.treeLCAs = {}
 	if RRT:
 	    Utils.setRRT()
 	    self.numberOfTrees = 1
@@ -30,16 +31,23 @@ class GradientBoosting(object):
         for target in self.targets:
             data = Utils.setTrainingData(target=target,facts=facts,examples=examples,bk=bk,regression=self.regression,sampling_rate = self.sampling_rate)
             trees = []
+            treeLCAs = []
             for i in range(self.numberOfTrees):
                 print ('='*20,"learning tree",str(i),'='*20)
                 node.setMaxDepth(self.treeDepth)
                 node.learnTree(data)
                 trees.append(node.learnedDecisionTree)
+                treeLCAs.append(node.LCAS)
                 Boosting.updateGradients(data,trees,loss=self.loss)
         self.trees[target] = trees
+        self.treeLCAs[target] = treeLCAs
         for tree in trees:
             print ('='*30,"tree",str(trees.index(tree)),'='*30)
             for clause in tree:
+                print (clause)
+        for treeLCA in treeLCAs:
+            print ('='*30,"tree",str(treeLCAs.index(treeLCA)),'='*30)
+            for clause in treeLCA:
                 print (clause)
 
     def infer(self,facts,examples):

@@ -11,7 +11,8 @@ class node(object):
     maxDepth = 1 #max depth set to 1 because we want to at least learn a tree of depth 1
     learnedDecisionTree = [] #this will hold all the clauses learned
     data = None #stores all the facts, positive and negative examples
-    learnedDotFile = [] #this will store the dot file for the tree learned
+    #learnedDotFile = [] #this will store the dot file for the tree learned
+    LCAS = [] #this will store the rrt with negations with LCA score
     label = 1
 
     @staticmethod
@@ -69,6 +70,8 @@ class node(object):
             curr.expandOnBestTest(data)
         node.learnedDecisionTree.sort(key = len)
         node.learnedDecisionTree = node.learnedDecisionTree[::-1]
+        node.LCAS.sort(key = len)
+        node.LCAS = node.LCAS[::-1]
         
     def getTrueExamples(self,clause,test,data):
         '''returns all examples that satisfy clause
@@ -90,16 +93,29 @@ class node(object):
         '''expands the node based on the best test'''
         target = data.getTarget() #get the target
         clause = target+":-" #initialize clause learned at this node with empty body
+        clause_with_negations = target+":-"
         curr = self #while loop to obtain clause learned at this node
         ancestorTests = []
         while curr.parent!="root":
             if curr.pos == "left":
                 clause += curr.parent.test+";"
+                clause_with_negations += curr.parent.test+";"
                 ancestorTests.append(curr.parent.test)
             elif curr.pos == "right":
                 clause += ""#"!"+curr.parent.test+","
+                clause_with_negations += "!"+curr.parent.test+";"
                 ancestorTests.append(curr.parent.test)
             curr = curr.parent
+        if self.level != node.maxDepth and round(self.information,8) !=0:
+            if clause_with_negations[-1]!='-':
+                node.LCAS.append(clause_with_negations[:-1]+" "+str(self.level))
+            else:
+                node.LCAS.append(clause_with_negations+" "+str(self.level))
+        else:
+            if clause_with_negations[-1]!='-':
+                node.LCAS.append(clause_with_negations[:-1]+" "+str(self.level))
+            else:
+                node.LCAS.append(clause_with_negations+" l"+str(self.level))
         if self.level == node.maxDepth or round(self.information,8) == 0:
             if clause[-1]!='-':
                 node.learnedDecisionTree.append(clause[:-1]+" "+str(Utils.getleafValue(self.examples)))
@@ -133,8 +149,10 @@ class node(object):
         if not tests:
             if clause[-1]!='-':
                 node.learnedDecisionTree.append(clause[:-1]+" "+str(Utils.getleafValue(self.examples)))
+                node.LCAS.append(clause_with_negations[:-1]+" "+str(self.level))
             else:
                 node.learnedDecisionTree.append(clause+" "+str(Utils.getleafValue(self.examples)))
+                node.LCAS.append(clause_with_negations+" "+str(self.level))
             return
         for test in tests: #see which test scores the best
             tExamples = self.getTrueExamples(clause,test,data) #get examples satisfied
@@ -164,6 +182,8 @@ class node(object):
         if self.test == "" or round(self.information,8) == 0: #if no examples append clause as is
             if clause[-1]!='-':
                 node.learnedDecisionTree.append(clause[:-1])
+                node.LCAS.append(clause_with_negations[:-1]+" "+str(self.level))
             else:
                 node.learnedDecisionTree.append(clause)
+                node.LCAS.append(clause_with_negations[:-1]+" "+str(self.level))
             return
