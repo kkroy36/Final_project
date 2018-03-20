@@ -13,7 +13,8 @@ class RLA(object):
             facts : (string[]) Facts
             bk : (string[]) background information
             loss : (string) can be "LS", "LAD" or "Huber" (default is LS)
-            RRT_depth : (int) depth of Relational Regression Trees (default is 5)
+            RRT_depth : (int) depth of Relational Regression Trees
+                        (default is 5)
 
         """
         if not examples:
@@ -31,7 +32,11 @@ class RLA(object):
         self.RRT_depth = RRT_depth
 
     def learn(self):
-        """Learn a low variance point estimate of the values using a deep RRT."""
+        """Learn a low variance point estimate.
+
+        This method learns a low variance point estimate of the values
+        using a deep RRT.
+        """
         reg = GradientBoosting(regression=True, RRT=True,
                                treeDepth=self.RRT_depth, loss=self.loss)
         reg.setTargets(["value"])
