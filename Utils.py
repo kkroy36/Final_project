@@ -52,8 +52,9 @@ class Data(object):
             if predicate.split('(')[0] == target:
                 self.examplesTrueValue[predicate] = value #store true value of example
                 self.examples[predicate] = value - sum(values)/float(len(values)) #set value for example, otherwise no variance
-		if Utils.RRT:
-                    self.examples[predicate] = value
+            if Utils.RRT:
+                self.examples[predicate] = value
+
 
     def setNeg(self,neg,target):
         '''set negative examples from neg list'''
@@ -144,7 +145,7 @@ class Utils(object):
     @staticmethod
     def setRRT():
         '''sets RRT to true'''
-	Utils.RRT = True
+        Utils.RRT = True
 
     @staticmethod
     def addVariableTypes(literal):
