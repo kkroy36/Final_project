@@ -25,6 +25,7 @@ class RLA(object):
             exit()
         if not bk:
             print ("No background file found!")
+            exit()
         self.examples = examples
         self.facts = facts
         self.bk = bk
