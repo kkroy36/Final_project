@@ -78,7 +78,20 @@ class IRL(object):
                 f.write(example+"\n")
                     
         '''
-        reg = GradientBoosting(regression=True,treeDepth=3,trees=self.trees,sampling_rate=0.1,loss=self.loss)
+        reg = GradientBoosting(RRT=True,regression=True,treeDepth=3,trees=self.trees,sampling_rate=0.1,loss=self.loss)
         reg.setTargets(["value"])
         reg.learn(facts,examples,bk)
-        self.model = reg    
+        self.model=reg
+	#self.test(facts=facts, examples=examples)
+
+    '''
+    def test(K = 1, facts=facts, examples=examples):
+        #computes the distance to K nearest neighbors and averages
+	treeLCAs = self.model.treeLCAs
+	for example in examples:
+	    print (example)
+            print (treeLCAs)
+            raw_input()
+    
+    '''
+

@@ -1,5 +1,8 @@
 """Module representing Relational Local Approximator."""
 from GradientBoosting import GradientBoosting
+from copy import deepcopy
+from Logical import Prover
+from Utils import Data
 
 
 class RLA(object):
@@ -44,6 +47,39 @@ class RLA(object):
         reg.learn(self.facts, self.examples, self.bk)
         self.model = reg
 
+    def compute_distance(self, test_example, training_example, distances):
+        """computes the distance between the test and training example"""
+
+        treeLCAs = self.model.treeLCAs
+        clauses = treeLCAs["value"][0]
+        for clause in clauses:
+            clause_LCA = clause.split(" ")[1]
+            if '!' in clause:
+                logical_clause = clause.split(" ")[0]
+                if Prover.prove(self.facts,test_example,logical_clause.replace("!","").replace(";",",")) and Prover.prove(self.facts,training_example,logical_clause.replace("!","").replace(";",",")):
+                    continue
+                else:
+                    clause_literals = logical_clause.split(";")
+                    logical_clause = ",".join([literal for literal in clause_literals if "!" not in literal])
+                    if Prover.prove(self.facts,test_example,logical_clause.replace("!","")) and Prover.prove(self.facts,training_example,logical_clause.replace("!","").replace(";",",")):
+                        distances[test_example][training_example] = clause_LCA
+            else:
+                logical_clause = clause.split(" ")[0].replace(";",",")
+                if Prover.prove(self.facts,test_example,logical_clause) and Prover.prove(self.facts,training_example,logical_clause):
+                    distances[test_example][training_example] = clause_LCA 
+
+    def test(self, K=1):
+        """compute K nearest neighbors and average the values"""
+        
+        distances = {}
+        for example in self.examples:
+            distances[example] = {}
+        training_examples = deepcopy(self.examples)
+        for example in self.examples: #for now test examples considered same as train
+            for training_example in training_examples:
+                self.compute_distance(example.split(" ")[0],training_example.split(" ")[0],distances)
+                
+
 
 def main():
     """Call RelationalLocalApprox class with read examples, facts and bk."""
@@ -58,7 +94,9 @@ def main():
           "value(state)"]
     approximator = RLA(examples=examples, facts=facts, bk=bk)
     approximator.learn()
+    approximator.test()
 
 
 # Driver code
 main()
+
