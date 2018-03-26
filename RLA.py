@@ -75,9 +75,11 @@ class RLA(object):
         for example in self.examples:
             distances[example] = {}
         training_examples = deepcopy(self.examples)
+        '''
         for example in self.examples: #for now test examples considered same as train
             for training_example in training_examples:
                 self.compute_distance(example.split(" ")[0],training_example.split(" ")[0],distances)
+        '''
                 
 
 
