@@ -62,10 +62,12 @@ class GradientBoosting(object):
             print ('='*30, "tree", str(trees.index(tree)), '='*30)
             for clause in tree:
                 print (clause)
+	'''
         for treeLCA in treeLCAs:
             print ('='*30, "tree", str(treeLCAs.index(treeLCA)), '='*30)
             for clause in treeLCA:
                 print (clause)
+	'''
 
     def infer(self, facts, examples):
         """Infer."""

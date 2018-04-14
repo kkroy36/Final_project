@@ -1,3 +1,7 @@
+"""Module representing Relational Local Approximator."""
+from GradientBoosting import GradientBoosting
+#from Logical import Prover
+import Utils
 class Domain(object):
     """contains which domain we are using"""
 
@@ -5,9 +9,10 @@ class Domain(object):
         """constructor"""
         self.domain_name = domain
         if self.domain_name == "logistics":
-            self.bk = ["tIn(+state,+truck,+city)",
-                       "bOn(+state,+box,+truck)",
+            self.bk = ["tIn(+state,+truck,+city,[h0;h1;h2;h3;h4])",
                        "destination(+state,+city)",
+                       "move(+state,+truck,[h0;h1;h2;h3;h4])",
+                       "unload(+state,+truck,[h0;h1;h2;h3;h4])",
                        "value(state)"]
 class Data(object):
     """holds the data object"""
@@ -21,9 +26,17 @@ class Data(object):
         domain_object = Domain(domain=self.domain)
         self.bk = domain_object.bk
 
+    def get_bk(self):
+        """returns background file"""
+        return self.bk
+
     def get_facts(self):
         """return the facts contained in the data object"""
         return self.facts
+
+    def get_examples(self):
+        """returns all examples in the data object"""
+        return self.examples
 
     def get_horizon(self):
         """returns horizon"""
@@ -47,15 +60,35 @@ class RLPOMDP(object):
 
     def __init__(self,observations,train_test_split=0.8):
         """constructor"""
-        observations = observations[1:]
+        observations = observations[1:200]
         observations = self.parse_observations(observations)
         self.training_observations = observations[:int(len(observations)*train_test_split)]
         self.testing_observations = observations[int(len(observations)*train_test_split):]
         self.make_data(self.training_observations)
         self.make_data(self.testing_observations,train=False)
+        self.model = None
         self.train()
+        print("-------Test----------")
+        self.test()
 
-    def train()
+    def train(self):
+        """train the model"""
+        reg_learners = [GradientBoosting(regression=True,RRT=True,treeDepth=5) for i in range(len(self.training_data_objects))]
+        for idx,reg_learner in enumerate(reg_learners):
+            reg_learner.setTargets(["value"])
+            reg_learner.learn(self.training_data_objects[2].get_facts(),self.training_data_objects[2].get_examples(),self.training_data_objects[2].get_bk())
+            self.model = reg_learner
+            break
+
+    def test(self):
+        """prelim testing"""
+        test_data_object = self.testing_data_objects[2]
+        facts = test_data_object.get_facts()
+        examples = test_data_object.get_examples()
+        self.model.infer(facts,examples)
+        print("======original=====")
+        print(examples)
+        
 
     def compute_value(self,belief_state,alpha_vector):
         """computes value of belief_state and action combination"""
@@ -86,20 +119,20 @@ class RLPOMDP(object):
                 observation_i = observation[i].split(',')
                 belief_state = [float(item.strip()) for item in observation_i[0][1:-1].split(' ')]
                 alpha_vector = [float(item.strip()) for item in observation_i[2][1:-1].split(' ') if item.strip() != ""]
-                action = ["unload(s"+str(idx)+",t1)"]
+                action = ["unload(s"+str(idx)+",t1,h"+str(i)+")"]
                 if observation_i[1] == '0':
-                    action = ["move(s"+str(idx)+",t1)"]
-                state_percept = ["destination(s"+str(idx)+",cd)",
-                                 "bOn(s"+str(idx)+",b1,t1)",
-                                 "tIn(s"+str(idx)+",t1,cd)"]
+                    action = ["move(s"+str(idx)+",t1,h"+str(i)+")"]
+                state_percept = ["destination(s"+str(idx)+",cd)",#,h"+str(i)+")",
+                                 "bOn(s"+str(idx)+",b1,t1,h"+str(i)+")",
+                                 "tIn(s"+str(idx)+",t1,cd,h"+str(i)+")"]
                 if observation_i[3] == '0':
-                    state_percept = ["destination(s"+str(idx)+",cd)",
-                                     "bOn(s"+str(idx)+",b1,t1)",
-                                     "tIn(s"+str(idx)+",t1,ncd)"]
+                    state_percept = ["destination(s"+str(idx)+",cd)",#,h"+str(i)+")",
+                                     "bOn(s"+str(idx)+",b1,t1,h"+str(i)+")",
+                                     "tIn(s"+str(idx)+",t1,ncd,h"+str(i)+")"]
                 value = self.compute_value(belief_state,alpha_vector)
-                example = ["value(s"+str(idx)+") "+str(value)+")"]
+                example = ["value(s"+str(idx)+") "+str(value)]
                 facts += state_percept + action
-                self.create_data_set(data_objects[i],facts, example)                
+                self.create_data_set(data_objects[i],facts, example)
             
 
     def parse_observations(self,observations):
